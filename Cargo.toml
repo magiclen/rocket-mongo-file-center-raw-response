@@ -1,0 +1,31 @@
+[package]
+name = "rocket-mongo-file-center-raw-response"
+version = "0.1.0"
+authors = ["Magic Len <len@magiclen.org>"]
+repository = "https://github.com/magiclen/rocket-mongo-file-center-raw-response"
+homepage = "https://magiclen.org/rocket-mongo-file-center-raw-response"
+keywords = ["rocket", "server", "web", "response", "etag"]
+categories = ["web-programming"]
+description= "This crate provides a response struct used for responding raw data from the File Center on MongoDB with **Etag** cache."
+readme = "README.md"
+license = "MIT"
+
+[badges]
+travis-ci = { repository = "magiclen/rocket-mongo-file-center-raw-response", branch = "master" }
+
+[dependencies]
+rocket = ">=0.3.16"
+mime = "0.3.12"
+mime_guess = " 2.0.0-alpha.6"
+percent-encoding = "1.0.1"
+
+rocket-etag-if-none-match = "0.2.1"
+
+mongo-file-center = "0.1.7"
+
+[dev-dependencies]
+rocket_codegen = ">=0.3.16"
+
+[dependencies.validators]
+version = "0.18.8"
+features = ["rocketly"]
