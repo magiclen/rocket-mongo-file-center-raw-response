@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-raw-response"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-mongo-file-center-raw-response"
 homepage = "https://magiclen.org/rocket-mongo-file-center-raw-response"
@@ -26,6 +26,6 @@ mongo-file-center = "0.1.7"
 [dev-dependencies]
 rocket_codegen = ">=0.3.16"
 
-[dependencies.validators]
+[dev-dependencies.validators]
 version = "0.18.8"
 features = ["rocketly"]
