@@ -20,7 +20,7 @@ const HOST: &str = "localhost";
 const PORT: u16 = 27017;
 
 #[get("/<id_token>")]
-fn view(etag_if_none_match: EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<FileCenterRawResponse, FileCenterError> {
+fn view(etag_if_none_match: EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
     let id = file_center.decrypt_id_token(id_token.get_short_crypt_url_component())?;
 
     let id_token = id_token.into_string();

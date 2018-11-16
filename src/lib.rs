@@ -78,25 +78,31 @@ impl Responder<'static> for FileCenterRawResponse {
 
 impl FileCenterRawResponse {
     /// Create a `FileCenterRawResponse` instance from a file item.
-    pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, etag_if_none_match: EtagIfNoneMatch, etag: EntityTag, id: &ObjectId, file_name: Option<S>) -> Result<FileCenterRawResponse, FileCenterError> {
+    pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, etag_if_none_match: EtagIfNoneMatch, etag: EntityTag, id: &ObjectId, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let is_etag_match = etag_if_none_match.weak_eq(&etag);
 
         if is_etag_match {
-            Ok(FileCenterRawResponse {
+            Ok(Some(FileCenterRawResponse {
                 file_item: None,
                 etag,
                 file_name: None,
-            })
+            }))
         } else {
             let file_item = file_center.get_file_item_by_id(id)?;
 
             let file_name = file_name.map(|file_name| file_name.into());
 
-            Ok(FileCenterRawResponse {
-                file_item,
-                etag,
-                file_name,
-            })
+            match file_item {
+                Some(file_item) => {
+                    let file_name = file_name.map(|file_name| file_name.into());
+                    Ok(Some(FileCenterRawResponse {
+                        file_item: Some(file_item),
+                        etag,
+                        file_name,
+                    }))
+                }
+                None => Ok(None)
+            }
         }
     }
 
