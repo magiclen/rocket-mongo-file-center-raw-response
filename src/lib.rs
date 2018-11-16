@@ -90,8 +90,6 @@ impl FileCenterRawResponse {
         } else {
             let file_item = file_center.get_file_item_by_id(id)?;
 
-            let file_name = file_name.map(|file_name| file_name.into());
-
             match file_item {
                 Some(file_item) => {
                     let file_name = file_name.map(|file_name| file_name.into());
