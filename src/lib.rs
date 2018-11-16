@@ -6,9 +6,7 @@ This crate provides response struct used for responding raw data from the File C
 See `examples`.
 */
 
-pub extern crate mime;
 pub extern crate mongo_file_center;
-extern crate mime_guess;
 extern crate percent_encoding;
 extern crate rocket;
 extern crate rocket_etag_if_none_match;

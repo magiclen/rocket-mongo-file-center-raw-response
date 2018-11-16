@@ -10,7 +10,7 @@ extern crate validators;
 use std::path::Path;
 
 use rocket_mongo_file_center_raw_response::{FileCenterRawResponse, EtagIfNoneMatch};
-use rocket_mongo_file_center_raw_response::mongo_file_center::{FileCenter, FileCenterError};
+use rocket_mongo_file_center_raw_response::mongo_file_center::{FileCenter, FileCenterError, mime};
 
 use rocket::request::State;
 
