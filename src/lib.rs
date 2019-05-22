@@ -12,7 +12,6 @@ extern crate rocket;
 extern crate rocket_etag_if_none_match;
 
 use std::io::Cursor;
-use std::fmt::{self, Debug, Formatter};
 
 use mongo_file_center::{FileCenter, FileItem, FileData, FileCenterError, bson::oid::ObjectId};
 
@@ -23,17 +22,12 @@ use rocket::request::Request;
 use rocket::http::{Status, hyper::header::ETag};
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
+#[derive(Debug)]
 pub struct FileCenterRawResponse {
     /// If it is `None`, that means the **Etag** is well-matched.
     pub file_item: Option<FileItem>,
     pub etag: EntityTag,
     pub file_name: Option<String>,
-}
-
-impl Debug for FileCenterRawResponse {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        f.write_fmt(format_args!("FileCenterRawResponse {{etag: {:?}, file_name: {:?}, file_item: {:?}}}", self.etag, self.file_name, self.file_item))
-    }
 }
 
 impl Responder<'static> for FileCenterRawResponse {
