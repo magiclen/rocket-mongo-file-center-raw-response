@@ -89,15 +89,10 @@ impl Responder<'static> for FileCenterRawResponse {
                     response.header(ETag(etag));
                 }
 
-                if let Some(file_name) = file_name {
-                    if !file_name.is_empty() {
-                        response.raw_header("Content-Disposition", format!("inline; filename*=UTF-8''{}", percent_encoding::percent_encode(file_name.as_bytes(), percent_encoding::QUERY_ENCODE_SET)));
-                    }
-                } else {
-                    let file_name = file_item.get_file_name();
-                    if !file_name.is_empty() {
-                        response.raw_header("Content-Disposition", format!("inline; filename*=UTF-8''{}", percent_encoding::percent_encode(file_name.as_bytes(), percent_encoding::QUERY_ENCODE_SET)));
-                    }
+                let file_name = file_name.as_ref().map(|file_name| file_name.as_str()).unwrap_or(file_item.get_file_name());
+
+                if !file_name.is_empty() {
+                    response.raw_header("Content-Disposition", format!("inline; filename*=UTF-8''{}", percent_encoding::percent_encode(file_name.as_bytes(), percent_encoding::QUERY_ENCODE_SET)));
                 }
 
                 response.raw_header("Content-Type", file_item.get_mime_type().to_string());
