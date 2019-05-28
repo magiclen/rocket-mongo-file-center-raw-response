@@ -29,6 +29,17 @@ pub struct FileCenterRawResponse {
 }
 
 impl FileCenterRawResponse {
+    /// Create a `FileCenterRawResponse` instance from a file item.
+    #[inline]
+    pub fn from_file_item<S: Into<String>>(etag: Option<EntityTag>, file_item: FileItem, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
+        let file_name = file_name.map(|file_name| file_name.into());
+
+        Ok(Some(FileCenterRawResponse {
+            etag,
+            file: Some((file_name, file_item)),
+        }))
+    }
+
     /// Create a `FileCenterRawResponse` instance from the object ID.
     pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, client_etag: Option<EtagIfNoneMatch>, etag: Option<EntityTag>, id: &ObjectId, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let is_etag_match = if let Some(client_etag) = client_etag {
@@ -52,12 +63,7 @@ impl FileCenterRawResponse {
 
             match file_item {
                 Some(file_item) => {
-                    let file_name = file_name.map(|file_name| file_name.into());
-
-                    Ok(Some(FileCenterRawResponse {
-                        etag,
-                        file: Some((file_name, file_item)),
-                    }))
+                    Self::from_file_item(etag, file_item, file_name)
                 }
                 None => Ok(None)
             }
@@ -65,6 +71,7 @@ impl FileCenterRawResponse {
     }
 
     /// Create a `FileCenterRawResponse` instance from an ID token.
+    #[inline]
     pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(file_center: &FileCenter, client_etag: Option<EtagIfNoneMatch>, id_token: T, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let id = file_center.decrypt_id_token(id_token.as_ref())?;
 
@@ -74,8 +81,19 @@ impl FileCenterRawResponse {
     }
 
     /// Given an **id_token**, and turned into an `EntityTag` instance.
+    #[inline]
     pub fn create_etag_by_id_token<S: Into<String>>(id_token: S) -> EntityTag {
         EntityTag::new(true, id_token.into())
+    }
+
+    #[inline]
+    /// Check if the file item is temporary.
+    pub fn is_temporary(&self) -> Option<bool> {
+        if let Some((_, file_item)) = self.file.as_ref() {
+            Some(file_item.get_expiration_time().is_some())
+        } else {
+            None
+        }
     }
 }
 
