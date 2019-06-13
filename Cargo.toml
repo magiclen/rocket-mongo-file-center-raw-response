@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-raw-response"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Magic Len <len@magiclen.org>"]
 repository = "https://github.com/magiclen/rocket-mongo-file-center-raw-response"
 homepage = "https://magiclen.org/rocket-mongo-file-center-raw-response"
@@ -17,7 +17,7 @@ travis-ci = { repository = "magiclen/rocket-mongo-file-center-raw-response", bra
 rocket = "0.4"
 percent-encoding = "1.0.1"
 
-rocket-etag-if-none-match = "0.3"
+rocket-etag-if-none-match = "0.3.2"
 
 mongo-file-center = "0.1.7"
 

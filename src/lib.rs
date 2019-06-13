@@ -41,7 +41,7 @@ impl FileCenterRawResponse {
     }
 
     /// Create a `FileCenterRawResponse` instance from the object ID.
-    pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, client_etag: Option<EtagIfNoneMatch>, etag: Option<EntityTag>, id: &ObjectId, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
+    pub fn from_object_id<S: Into<String>>(file_center: &FileCenter, client_etag: Option<&EtagIfNoneMatch>, etag: Option<EntityTag>, id: &ObjectId, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let is_etag_match = if let Some(client_etag) = client_etag {
             match etag.as_ref() {
                 Some(etag) => {
@@ -70,14 +70,14 @@ impl FileCenterRawResponse {
         }
     }
 
-    /// Create a `FileCenterRawResponse` instance from an ID token.
+    /// Create a `FileCenterRawResponse` instance from an ID token. It will force to use the `ETag` cache.
     #[inline]
-    pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(file_center: &FileCenter, client_etag: Option<EtagIfNoneMatch>, id_token: T, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
+    pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(file_center: &FileCenter, client_etag: &EtagIfNoneMatch, id_token: T, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let id = file_center.decrypt_id_token(id_token.as_ref())?;
 
         let etag = Self::create_etag_by_id_token(id_token);
 
-        Self::from_object_id(file_center, client_etag, Some(etag), &id, file_name)
+        Self::from_object_id(file_center, Some(client_etag), Some(etag), &id, file_name)
     }
 
     /// Given an **id_token**, and turned into an `EntityTag` instance.

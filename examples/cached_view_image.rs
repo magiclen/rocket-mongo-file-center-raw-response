@@ -20,10 +20,10 @@ const HOST: &str = "localhost";
 const PORT: u16 = 27017;
 
 #[get("/<id_token>")]
-fn view(etag_if_none_match: EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
+fn view(etag_if_none_match: &EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
     let id_token = id_token.into_string();
 
-    FileCenterRawResponse::from_id_token(file_center.inner(), Some(etag_if_none_match), id_token, None::<String>)
+    FileCenterRawResponse::from_id_token(file_center.inner(), etag_if_none_match, id_token, None::<String>)
 }
 
 fn main() {
