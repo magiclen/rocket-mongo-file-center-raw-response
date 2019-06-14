@@ -31,13 +31,13 @@ pub struct FileCenterRawResponse {
 impl FileCenterRawResponse {
     /// Create a `FileCenterRawResponse` instance from a file item.
     #[inline]
-    pub fn from_file_item<S: Into<String>>(etag: Option<EntityTag>, file_item: FileItem, file_name: Option<S>) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
+    pub fn from_file_item<S: Into<String>>(etag: Option<EntityTag>, file_item: FileItem, file_name: Option<S>) -> FileCenterRawResponse {
         let file_name = file_name.map(|file_name| file_name.into());
 
-        Ok(Some(FileCenterRawResponse {
+        FileCenterRawResponse {
             etag,
             file: Some((file_name, file_item)),
-        }))
+        }
     }
 
     /// Create a `FileCenterRawResponse` instance from the object ID.
@@ -63,7 +63,7 @@ impl FileCenterRawResponse {
 
             match file_item {
                 Some(file_item) => {
-                    Self::from_file_item(etag, file_item, file_name)
+                    Ok(Some(Self::from_file_item(etag, file_item, file_name)))
                 }
                 None => Ok(None)
             }

@@ -23,7 +23,11 @@ const PORT: u16 = 27017;
 fn view(etag_if_none_match: &EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
     let id_token = id_token.into_string();
 
-    FileCenterRawResponse::from_id_token(file_center.inner(), etag_if_none_match, id_token, None::<String>)
+    let object_id = file_center.decrypt_id_token(&id_token)?;
+
+    let etag = FileCenterRawResponse::create_etag_by_id_token(id_token);
+
+    FileCenterRawResponse::from_object_id(file_center.inner(), Some(etag_if_none_match), Some(etag), &object_id, None::<String>)
 }
 
 fn main() {
