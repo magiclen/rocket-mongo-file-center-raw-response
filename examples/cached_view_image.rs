@@ -23,11 +23,7 @@ const PORT: u16 = 27017;
 fn view(etag_if_none_match: &EtagIfNoneMatch, file_center: State<FileCenter>, id_token: ShortCryptUrlComponent) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
     let id_token = id_token.into_string();
 
-    let object_id = file_center.decrypt_id_token(&id_token)?;
-
-    let etag = FileCenterRawResponse::create_etag_by_id_token(id_token);
-
-    FileCenterRawResponse::from_object_id(file_center.inner(), Some(etag_if_none_match), Some(etag), &object_id, None::<String>)
+    FileCenterRawResponse::from_id_token(file_center.inner(), etag_if_none_match, id_token, None::<String>)
 }
 
 fn main() {
@@ -35,7 +31,7 @@ fn main() {
 
     let file_center = FileCenter::new(HOST, PORT, database).unwrap();
 
-    let path = Path::join(Path::new("examples"), Path::join(Path::new("images"), "image(貓).jpg"));
+    let path = Path::new("image.jpg");
 
     let file = file_center.put_file_by_path(path, None::<String>, Some(mime::IMAGE_JPEG)).unwrap();
 
