@@ -1,20 +1,32 @@
 language: rust
 
 rust:
-- nightly
+  - nightly
 
-cache: cargo
+os:
+  - linux
+#  - osx
+#  - windows
 
-env:
-  global:
-  - CACHE_NAME=global_cache
-  matrix:
-  - MONGODB_RELEASE=mongodb-linux-x86_64-ubuntu1404-3.4.15
-  - MONGODB_RELEASE=mongodb-linux-x86_64-ubuntu1404-3.6.5
-  - MONGODB_RELEASE=mongodb-linux-x86_64-ubuntu1404-4.0.0
+services: mongodb
 
-before_install:
-- ./script/start_mongo_release $TRAVIS_OS_NAME $MONGODB_RELEASE
-
-script:
-- cargo test --verbose
+matrix:
+  include:
+    - rust: nightly
+      os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+      install:
+        - sudo apt update
+        - sudo apt install musl-tools
+        - rustup target add $TARGET
+      script: cargo test --target $TARGET
+#    - rust: nightly
+#      os: windows
+#      env: TARGET=x86_64-pc-windows-gnu
+#      install:
+#        - rustup set default-host $TARGET
+#        - rustup default $TRAVIS_RUST_VERSION
+#        - rustup target add $TARGET
+#        - mkdir -p ~/.cargo
+#        - printf '\n[target.'$TARGET']\nlinker = "x86_64-w64-mingw32-gcc"\nar = "x86_64-w64-mingw32-ar"\n' >> ~/.cargo/config
+#      script: cargo test --target $TARGET
