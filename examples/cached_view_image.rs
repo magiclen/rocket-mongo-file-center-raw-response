@@ -16,8 +16,7 @@ use rocket::request::State;
 
 use validators::short_crypt_url_component::ShortCryptUrlComponent;
 
-const HOST: &str = "localhost";
-const PORT: u16 = 27017;
+const URI: &str = "mongodb://localhost:27017";
 
 #[get("/<id_token>")]
 fn view(
@@ -38,7 +37,7 @@ fn view(
 fn main() {
     let database = "test_rocket_mongo_file_center_raw_response";
 
-    let file_center = FileCenter::new(HOST, PORT, database).unwrap();
+    let file_center = FileCenter::new(URI, database).unwrap();
 
     let path = Path::new("image.jpg");
 

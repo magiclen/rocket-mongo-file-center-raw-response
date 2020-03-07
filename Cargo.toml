@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-raw-response"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2018"
 repository = "https://github.com/magiclen/rocket-mongo-file-center-raw-response"
@@ -21,7 +21,7 @@ percent-encoding = "2"
 
 rocket-etag-if-none-match = "0.3.2"
 
-mongo-file-center = "0.2"
+mongo-file-center = "0.3"
 
 [dev-dependencies.validators]
 version = ">=0.19,<0.21"
