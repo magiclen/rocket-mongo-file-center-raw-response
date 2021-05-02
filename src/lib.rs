@@ -7,32 +7,28 @@ See `examples`.
 */
 
 pub extern crate mongo_file_center;
-extern crate percent_encoding;
 extern crate rocket;
-extern crate rocket_etag_if_none_match;
+extern crate url_escape;
 
-use std::io::Cursor;
+use std::io::{self, Cursor, ErrorKind, Read};
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
-use mongo_file_center::{bson::oid::ObjectId, FileCenter, FileCenterError, FileData, FileItem};
+pub use rocket_etag_if_none_match::entity_tag::EntityTag;
+pub use rocket_etag_if_none_match::EtagIfNoneMatch;
 
-pub use rocket_etag_if_none_match::{EntityTag, EtagIfNoneMatch};
+use mongo_file_center::mongodb_cwal::oid::ObjectId;
+use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 
-use rocket::http::{hyper::header::ETag, Status};
+use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-
-use percent_encoding::{AsciiSet, CONTROLS};
-
-const FRAGMENT_PERCENT_ENCODE_SET: &AsciiSet =
-    &CONTROLS.add(b' ').add(b'"').add(b'<').add(b'>').add(b'`');
-
-const PATH_PERCENT_ENCODE_SET: &AsciiSet =
-    &FRAGMENT_PERCENT_ENCODE_SET.add(b'#').add(b'?').add(b'{').add(b'}');
+use rocket::tokio::io::{AsyncRead, ReadBuf};
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
 pub struct FileCenterRawResponse {
-    etag: Option<EntityTag>,
+    etag: Option<EntityTag<'static>>,
     file: Option<(Option<String>, FileItem)>,
 }
 
@@ -40,7 +36,7 @@ impl FileCenterRawResponse {
     /// Create a `FileCenterRawResponse` instance from a file item.
     #[inline]
     pub fn from_file_item<S: Into<String>>(
-        etag: Option<EntityTag>,
+        etag: Option<EntityTag<'static>>,
         file_item: FileItem,
         file_name: Option<S>,
     ) -> FileCenterRawResponse {
@@ -56,7 +52,7 @@ impl FileCenterRawResponse {
     pub fn from_object_id<S: Into<String>>(
         file_center: &FileCenter,
         client_etag: Option<&EtagIfNoneMatch>,
-        etag: Option<EntityTag>,
+        etag: Option<EntityTag<'static>>,
         id: &ObjectId,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
@@ -101,8 +97,8 @@ impl FileCenterRawResponse {
 
     /// Given an **id_token**, and turned into an `EntityTag` instance.
     #[inline]
-    pub fn create_etag_by_id_token<S: Into<String>>(id_token: S) -> EntityTag {
-        EntityTag::new(true, id_token.into())
+    pub fn create_etag_by_id_token<S: Into<String>>(id_token: S) -> EntityTag<'static> {
+        EntityTag::with_string(true, id_token.into()).unwrap()
     }
 
     #[inline]
@@ -116,32 +112,24 @@ impl FileCenterRawResponse {
     }
 }
 
-impl Responder<'static> for FileCenterRawResponse {
-    fn respond_to(self, _: &Request) -> response::Result<'static> {
+impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterRawResponse {
+    fn respond_to(self, _: &'r Request<'_>) -> response::Result<'o> {
         let mut response = Response::build();
 
         match self.file {
             Some((file_name, file_item)) => {
                 if let Some(etag) = self.etag {
-                    response.header(ETag(etag));
+                    response.raw_header("Etag", etag.to_string());
                 }
 
-                let file_name = file_name
-                    .as_ref()
-                    .map(|file_name| file_name.as_str())
-                    .unwrap_or_else(|| file_item.get_file_name());
+                let file_name = file_name.as_deref().unwrap_or_else(|| file_item.get_file_name());
 
                 if !file_name.is_empty() {
-                    response.raw_header(
-                        "Content-Disposition",
-                        format!(
-                            "inline; filename*=UTF-8''{}",
-                            percent_encoding::percent_encode(
-                                file_name.as_bytes(),
-                                PATH_PERCENT_ENCODE_SET
-                            )
-                        ),
-                    );
+                    let mut v = String::from("inline; filename*=UTF-8''");
+
+                    url_escape::encode_component_to_string(file_name, &mut v);
+
+                    response.raw_header("Content-Disposition", v);
                 }
 
                 response.raw_header("Content-Type", file_item.get_mime_type().to_string());
@@ -150,12 +138,12 @@ impl Responder<'static> for FileCenterRawResponse {
 
                 match file_item.into_file_data() {
                     FileData::Collection(v) => {
-                        response.sized_body(Cursor::new(v));
+                        response.sized_body(v.len(), Cursor::new(v));
                     }
                     FileData::GridFS(g) => {
                         response.raw_header("Content-Length", file_size.to_string());
 
-                        response.streamed_body(g);
+                        response.streamed_body(AsyncReader(g));
                     }
                 }
             }
@@ -165,5 +153,25 @@ impl Responder<'static> for FileCenterRawResponse {
         }
 
         response.ok()
+    }
+}
+
+struct AsyncReader<R>(R);
+
+impl<R: Read + Unpin> AsyncRead for AsyncReader<R> {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        _: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<Result<(), io::Error>> {
+        match self.0.read(buf.initialize_unfilled()) {
+            Ok(c) => {
+                buf.advance(c);
+
+                Poll::Ready(Ok(()))
+            }
+            Err(ref e) if e.kind() == ErrorKind::WouldBlock => Poll::Pending,
+            Err(e) => Poll::Ready(Err(e)),
+        }
     }
 }
