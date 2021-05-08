@@ -10,9 +10,9 @@ pub extern crate mongo_file_center;
 extern crate rocket;
 extern crate url_escape;
 
-use std::io::{self, Cursor, ErrorKind, Read};
-use std::pin::Pin;
-use std::task::{Context, Poll};
+mod async_reader;
+
+use std::io::Cursor;
 
 pub use rocket_etag_if_none_match::entity_tag::EntityTag;
 pub use rocket_etag_if_none_match::EtagIfNoneMatch;
@@ -23,7 +23,8 @@ use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-use rocket::tokio::io::{AsyncRead, ReadBuf};
+
+use async_reader::AsyncReader;
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
@@ -143,7 +144,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterRawResponse {
                     FileData::GridFS(g) => {
                         response.raw_header("Content-Length", file_size.to_string());
 
-                        response.streamed_body(AsyncReader(g));
+                        response.streamed_body(AsyncReader::from(g));
                     }
                 }
             }
@@ -153,25 +154,5 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterRawResponse {
         }
 
         response.ok()
-    }
-}
-
-struct AsyncReader<R>(R);
-
-impl<R: Read + Unpin> AsyncRead for AsyncReader<R> {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        _: &mut Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<Result<(), io::Error>> {
-        match self.0.read(buf.initialize_unfilled()) {
-            Ok(c) => {
-                buf.advance(c);
-
-                Poll::Ready(Ok(()))
-            }
-            Err(ref e) if e.kind() == ErrorKind::WouldBlock => Poll::Pending,
-            Err(e) => Poll::Ready(Err(e)),
-        }
     }
 }
