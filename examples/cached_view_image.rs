@@ -26,7 +26,7 @@ struct ShortCryptUrlComponent(pub(crate) String);
 #[get("/<id_token>")]
 fn view(
     etag_if_none_match: &EtagIfNoneMatch,
-    file_center: State<FileCenter>,
+    file_center: &State<FileCenter>,
     id_token: ShortCryptUrlComponent,
 ) -> Result<Option<FileCenterRawResponse>, Status> {
     FileCenterRawResponse::from_id_token(
