@@ -17,7 +17,7 @@ use rocket::State;
 
 use validators::prelude::*;
 
-const URI: &str = "mongodb://localhost:27017/test_rocket_mongo_file_center_download_response";
+const URI: &str = "mongodb://192.168.100.101:27017/test_rocket_mongo_file_center_download_response";
 
 #[derive(Debug, Clone, Validator)]
 #[validator(base64_url(padding(NotAllow)))]

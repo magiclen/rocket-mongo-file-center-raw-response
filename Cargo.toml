@@ -13,18 +13,17 @@ license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
-rocket = { git = "https://github.com/SergioBenitez/Rocket", version = "0.5.0-dev" }
+rocket = "0.5.0-rc.1"
 url-escape = "0.1"
 
-rocket-etag-if-none-match = { git = "https://github.com/magiclen/rocket-etag-if-none-match", version = "0.4" }
+rocket-etag-if-none-match = "0.4"
 
-mongo-file-center = "0.5"
+mongo-file-center = { git = "https://github.com/magiclen/mongo-file-center" }
 
 [dev-dependencies]
-validators = { git = "https://github.com/magiclen/validators", version = "0.23" }
+validators = "0.23"
 
 [dev-dependencies.validators-derive]
 version = "0.23"
-git = "https://github.com/magiclen/validators"
 default-features = false
 features = ["base64_url", "rocket"]
