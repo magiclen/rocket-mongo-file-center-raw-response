@@ -86,9 +86,9 @@ impl FileCenterRawResponse {
 
     /// Create a `FileCenterRawResponse` instance from an ID token. It will force to use the `ETag` cache.
     #[inline]
-    pub async fn from_id_token<'a, T: AsRef<str> + Into<String>, S: Into<String>>(
+    pub async fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(
         file_center: &FileCenter,
-        client_etag: &EtagIfNoneMatch<'a>,
+        client_etag: &EtagIfNoneMatch<'_>,
         id_token: T,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
