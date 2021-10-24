@@ -6,25 +6,28 @@ This crate provides response struct used for responding raw data from the File C
 See `examples`.
 */
 
+extern crate tokio_util;
+
 pub extern crate mongo_file_center;
+
+extern crate rocket_etag_if_none_match;
+
 extern crate rocket;
 extern crate url_escape;
 
-mod async_reader;
-
 use std::io::Cursor;
+
+use tokio_util::io::StreamReader;
+
+use mongo_file_center::bson::oid::ObjectId;
+use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
 
 pub use rocket_etag_if_none_match::entity_tag::EntityTag;
 pub use rocket_etag_if_none_match::EtagIfNoneMatch;
 
-use mongo_file_center::mongodb_cwal::oid::ObjectId;
-use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
-
 use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-
-use async_reader::AsyncReader;
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
@@ -50,11 +53,11 @@ impl FileCenterRawResponse {
     }
 
     /// Create a `FileCenterRawResponse` instance from the object ID.
-    pub fn from_object_id<S: Into<String>>(
-        file_center: &FileCenter,
-        client_etag: Option<&EtagIfNoneMatch>,
+    pub async fn from_object_id<'a, S: Into<String>>(
+        file_center: &'a FileCenter,
+        client_etag: Option<&EtagIfNoneMatch<'a>>,
         etag: Option<EntityTag<'static>>,
-        id: &ObjectId,
+        id: ObjectId,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
         let is_etag_match = if let Some(client_etag) = client_etag {
@@ -72,7 +75,7 @@ impl FileCenterRawResponse {
                 file: None,
             }))
         } else {
-            let file_item = file_center.get_file_item_by_id(id)?;
+            let file_item = file_center.get_file_item_by_id(id).await?;
 
             match file_item {
                 Some(file_item) => Ok(Some(Self::from_file_item(etag, file_item, file_name))),
@@ -83,9 +86,9 @@ impl FileCenterRawResponse {
 
     /// Create a `FileCenterRawResponse` instance from an ID token. It will force to use the `ETag` cache.
     #[inline]
-    pub fn from_id_token<T: AsRef<str> + Into<String>, S: Into<String>>(
+    pub async fn from_id_token<'a, T: AsRef<str> + Into<String>, S: Into<String>>(
         file_center: &FileCenter,
-        client_etag: &EtagIfNoneMatch,
+        client_etag: &EtagIfNoneMatch<'a>,
         id_token: T,
         file_name: Option<S>,
     ) -> Result<Option<FileCenterRawResponse>, FileCenterError> {
@@ -93,7 +96,7 @@ impl FileCenterRawResponse {
 
         let etag = Self::create_etag_by_id_token(id_token);
 
-        Self::from_object_id(file_center, Some(client_etag), Some(etag), &id, file_name)
+        Self::from_object_id(file_center, Some(client_etag), Some(etag), id, file_name).await
     }
 
     /// Given an **id_token**, and turned into an `EntityTag` instance.
@@ -138,13 +141,13 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterRawResponse {
                 let file_size = file_item.get_file_size();
 
                 match file_item.into_file_data() {
-                    FileData::Collection(v) => {
+                    FileData::Buffer(v) => {
                         response.sized_body(v.len(), Cursor::new(v));
                     }
-                    FileData::GridFS(g) => {
+                    FileData::Stream(g) => {
                         response.raw_header("Content-Length", file_size.to_string());
 
-                        response.streamed_body(AsyncReader::from(g));
+                        response.streamed_body(StreamReader::new(g));
                     }
                 }
             }
