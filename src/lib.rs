@@ -6,14 +6,7 @@ This crate provides response struct used for responding raw data from the File C
 See `examples`.
 */
 
-extern crate tokio_util;
-
 pub extern crate mongo_file_center;
-
-extern crate rocket_etag_if_none_match;
-
-extern crate rocket;
-extern crate url_escape;
 
 use std::io::Cursor;
 
