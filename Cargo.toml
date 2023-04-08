@@ -3,6 +3,7 @@ name = "rocket-mongo-file-center-raw-response"
 version = "0.8.2"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
+rust-version = "1.63"
 repository = "https://github.com/magiclen/rocket-mongo-file-center-raw-response"
 homepage = "https://magiclen.org/rocket-mongo-file-center-raw-response"
 keywords = ["rocket", "server", "web", "mongodb", "etag"]
@@ -14,7 +15,7 @@ include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
 tokio-util = { version = "0.7", features = ["io"] }
-rocket = "0.5.0-rc.2"
+rocket = "0.5.0-rc.3"
 
 mongo-file-center = "0.6.2"
 

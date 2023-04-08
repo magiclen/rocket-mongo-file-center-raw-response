@@ -10,17 +10,14 @@ pub extern crate mongo_file_center;
 
 use std::io::Cursor;
 
+use mongo_file_center::{bson::oid::ObjectId, FileCenter, FileCenterError, FileData, FileItem};
+use rocket::{
+    http::Status,
+    request::Request,
+    response::{self, Responder, Response},
+};
+pub use rocket_etag_if_none_match::{entity_tag::EntityTag, EtagIfNoneMatch};
 use tokio_util::io::StreamReader;
-
-use mongo_file_center::bson::oid::ObjectId;
-use mongo_file_center::{FileCenter, FileCenterError, FileData, FileItem};
-
-pub use rocket_etag_if_none_match::entity_tag::EntityTag;
-pub use rocket_etag_if_none_match::EtagIfNoneMatch;
-
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{self, Responder, Response};
 
 /// The response struct used for responding raw data from the File Center on MongoDB with **Etag** cache.
 #[derive(Debug)]
@@ -64,8 +61,7 @@ impl FileCenterRawResponse {
 
         if is_etag_match {
             Ok(Some(FileCenterRawResponse {
-                etag: None,
-                file: None,
+                etag: None, file: None
             }))
         } else {
             let file_item = file_center.get_file_item_by_id(id).await?;
@@ -136,17 +132,17 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for FileCenterRawResponse {
                 match file_item.into_file_data() {
                     FileData::Buffer(v) => {
                         response.sized_body(v.len(), Cursor::new(v));
-                    }
+                    },
                     FileData::Stream(g) => {
                         response.raw_header("Content-Length", file_size.to_string());
 
                         response.streamed_body(StreamReader::new(g));
-                    }
+                    },
                 }
-            }
+            },
             None => {
                 response.status(Status::NotModified);
-            }
+            },
         }
 
         response.ok()
