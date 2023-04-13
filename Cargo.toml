@@ -9,7 +9,6 @@ homepage = "https://magiclen.org/rocket-mongo-file-center-raw-response"
 keywords = ["rocket", "server", "web", "mongodb", "etag"]
 categories = ["web-programming"]
 description = "This crate provides a response struct used for responding raw data from the File Center on MongoDB with **Etag** cache optionally."
-readme = "README.md"
 license = "MIT"
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
