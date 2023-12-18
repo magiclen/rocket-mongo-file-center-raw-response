@@ -1,6 +1,6 @@
 [package]
 name = "rocket-mongo-file-center-raw-response"
-version = "0.8.4"
+version = "0.8.5"
 authors = ["Magic Len <len@magiclen.org>"]
 edition = "2021"
 rust-version = "1.69"
@@ -14,7 +14,7 @@ include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
 tokio-util = { version = "0.7", features = ["io"] }
-rocket = "0.5.0-rc.4"
+rocket = "0.5"
 
 mongo-file-center = "0.6.2"
 
@@ -26,6 +26,6 @@ rocket-etag-if-none-match = "0.4"
 slash-formatter = "3.1.2"
 
 [dev-dependencies.validators]
-version = "0.24"
+version = "0.25"
 default-features = false
 features = ["derive", "base64_url", "rocket"]

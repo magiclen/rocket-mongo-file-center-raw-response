@@ -5,7 +5,7 @@ use validators::prelude::*;
 const HOST_URI: &str = "mongodb://localhost:27017";
 
 #[derive(Debug, Clone, Validator)]
-#[validator(base64_url(padding(NotAllow)))]
+#[validator(base64_url(padding(Disallow)))]
 pub struct ShortCryptUrlComponent(pub(crate) String);
 
 #[inline]
